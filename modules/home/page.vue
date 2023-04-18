@@ -43,7 +43,7 @@ async function testDialogs() {
   <v-container fluid class="fill-height d-flex flex-column align-center justify-center">
 
     <div class="text-h5">
-      Hello From Unified Frontend
+      Hello From Websocket Tester
     </div>
 
     <v-btn
