@@ -39,11 +39,11 @@ import { UnifiedToastsProvider } from './utilities/unified-toasts/mod';
 <template>
   <v-app>
 
-    <Header>
+    <Head>
       <Title>
         Websocket Tester
       </Title>
-    </Header>
+    </Head>
 
     <template v-if="loading">
       <div class="h-100 d-flex flex-column align-center justify-center">
