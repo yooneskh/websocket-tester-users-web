@@ -65,6 +65,7 @@ async function connectWebsocket() {
 
   websocket.onerror = (error) => {
 
+    wsConf.connecting = false;
     wsConf.connected = false;
 
     events.value.push({

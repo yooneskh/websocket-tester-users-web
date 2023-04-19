@@ -18,6 +18,7 @@
     "@ckeditor/ckeditor5-build-classic": "37.0.1",
     "@ckeditor/ckeditor5-vue": "5.1.0",
     "@mdi/font": "7.2.96",
+    "@stomp/stompjs": "7.0.0",
     "@vueuse/core": "10.0.2",
     "dayjs": "1.11.7",
     "jalaliday": "2.3.0",
