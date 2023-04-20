@@ -5332,10 +5332,10 @@ unhead@1.1.26:
     "@unhead/shared" "1.1.26"
     hookable "^5.5.3"
 
-unified-form-vuetify@0.6.1:
-  version "0.6.1"
-  resolved "https://registry.yarnpkg.com/unified-form-vuetify/-/unified-form-vuetify-0.6.1.tgz#08a3c316a1689cee96856534efa9a7aa23503c1c"
-  integrity sha512-UQbilhuXGt8XfkJMUJnzqhKOJN/mHOku5w7ximR9nK8NtRsh98BnUOtc8jIJMicGa5E/FhRBbhZJOOlFw6Q2Zw==
+unified-form-vuetify@0.6.2:
+  version "0.6.2"
+  resolved "https://registry.yarnpkg.com/unified-form-vuetify/-/unified-form-vuetify-0.6.2.tgz#11ca3520878a436d0da6b04350feb5645b3092ab"
+  integrity sha512-eQtp5uJZ9/bDzRmZeVXBjwFdu+Lf166jEPd6EhFBTdTvcTx50weKJLRAfaI5GHj9fu+rIJB/kI/e+dNosJewxw==
 
 unified-form@0.7.2:
   version "0.7.2"
