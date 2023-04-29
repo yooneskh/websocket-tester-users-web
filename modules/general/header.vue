@@ -41,9 +41,26 @@ function handleLogout() {
     <v-spacer />
 
     <v-toolbar-items>
-      <v-btn append-icon="mdi-open-in-new" href="https://github.com/yooneskh" target="_blank">
+
+      <v-btn :to="{ name: 'general.home' }" exact>
+        Websocket
+      </v-btn>
+
+      <v-btn :to="{ name: 'general.stomp' }" exact>
+        Stomp
+      </v-btn>
+
+      <v-btn :to="{ name: 'general.user-stomp' }" exact>
+        Sessioned Stomp
+      </v-btn>
+
+      <v-btn
+        append-icon="mdi-open-in-new"
+        href="https://github.com/yooneskh"
+        target="_blank">
         Made By Yooneskh
       </v-btn>
+
     </v-toolbar-items>
 
   </v-app-bar>

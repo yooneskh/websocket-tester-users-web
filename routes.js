@@ -21,6 +21,11 @@ export const routes = [
         path: '/stomp',
         file: resolve('./modules/home/stomp-page.vue'),
       },
+      {
+        name: 'general.user-stomp',
+        path: '/user-stomp',
+        file: resolve('./modules/home/user-stomp-page.vue'),
+      },
     ],
   },
 ];

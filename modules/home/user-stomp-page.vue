@@ -3,13 +3,26 @@
 const { toastError } = useToast();
 
 
+useHead({
+  script: [
+    { src: 'https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js' },
+  ],
+});
+
 const wsConf = reactive({
   url: '',
+  headers: [],
   connecting: false,
   connected: false,
 });
 
-let websocket;
+const subscribeConf = reactive({
+  prefix: '',
+});
+
+import { Stomp } from '@stomp/stompjs';
+let client;
+let sessionId;
 
 
 async function connectWebsocket() {
@@ -17,22 +30,15 @@ async function connectWebsocket() {
   wsConf.connected = false;
   wsConf.connecting = true;
 
-
-  if (websocket) {
-    websocket.close();
-    await new Promise(r => setTimeout(r, 1000))
-  }
-
-
-  websocket = new WebSocket(wsConf.url);
+  const socket = new SockJS(wsConf.url);
+  client = Stomp.over(socket);
 
   events.value.push({
     type: 'connecting',
     at: new Date(),
   });
 
-
-  websocket.onopen = () => {
+  client.connect({}, frame => {
 
     wsConf.connected = true;
     wsConf.connecting = false;
@@ -42,59 +48,67 @@ async function connectWebsocket() {
       at: new Date(),
     });
 
-  }
 
-  websocket.onmessage = (data) => {
-    events.value.push({
-      type: 'received',
-      data: data.data,
-      at: new Date(),
-    });
-  }
+    let url = client.ws._transport.url;
 
-  websocket.onclose = () => {
+    url = url.replace(wsConf.url,  '');
+    url = url.replace(wsConf.url.replace('http://', 'ws://'),  '');
+    url = url.replace(wsConf.url.replace('https://', 'ws://'),  '');
+    url = url.replace('/websocket', '');
+    url = url.replace(/^\/+[0-9]+\/+/, '');
 
-    wsConf.connected = false;
+    sessionId = url;
 
-    events.value.push({
-      type: 'disconnected',
-      at: new Date(),
-    });
+    const subscriprionRoom = subscribeConf.prefix + sessionId;
 
-  }
 
-  websocket.onerror = (error) => {
-
-    wsConf.connecting = false;
-    wsConf.connected = false;
-
-    events.value.push({
-      type: 'error',
-      error,
-      at: new Date(),
+    client.subscribe(subscriprionRoom, (msgOut) => {
+      events.value.push({
+        type: 'received',
+        sessionId,
+        room: subscriprionRoom,
+        data: msgOut,
+        at: new Date(),
+      });
     });
 
-  }
+    events.value.push({
+      type: 'subscribed to',
+      sessionId,
+      room: subscriprionRoom,
+      at: new Date(),
+    });
 
+  });
+
+}
+
+function disconnectWebsocket() {
+  client?.deactivate();
 }
 
 
 const sendConf = reactive({
+  room: '',
   data: '',
 });
 
 function sendData() {
 
-  if (!websocket) {
+  if (!client) {
     return toastError({
-      title: 'Websocket is not connected.',
+      title: 'client is not connected.',
     });
   }
 
-  websocket.send(sendConf.data);
+  client.publish({
+    destination: sendConf.room,
+    body: sendConf.data,
+  });
 
   events.value.push({
     type: 'sent',
+    room: sendConf.room,
     data: sendConf.data,
     at: new Date(),
   });
@@ -108,10 +122,10 @@ const events = ref([]);
 
 
 <template>
-  <v-container fluid style="max-width: 1024px;">
+  <v-container fluid style="max-width: 1400px;">
 
     <v-row>
-      <v-col cols="12" md="6">
+      <v-col cols="12" md="6" lg="4">
 
         <v-card prepend-icon="mdi-server" title="Websocket Connection">
 
@@ -121,7 +135,18 @@ const events = ref([]);
               :fields="[
                 {
                   key: 'url', identifier: 'text', label: 'Websocket Server Url',
-                }
+                },
+                {
+                  key: 'headers', identifier: 'series', label: 'Connect Headers',
+                  itemFields: [
+                    {
+                      key: 'key', identifier: 'text', label: 'Key', width: 6,
+                    },
+                    {
+                      key: 'value', identifier: 'text', label: 'Value', width: 6,
+                    },
+                  ]
+                },
               ]"
             />
           </v-card-text>
@@ -132,30 +157,52 @@ const events = ref([]);
               v-if="!wsConf.connected"
               variant="tonal"
               color="error"
+              size="small"
               prepend-icon="mdi-alert"
               text="Not Connected"
-              size="small"
             />
             <v-chip
               v-else
               variant="tonal"
               color="success"
+              size="small"
               prepend-icon="mdi-check"
               text="Connected"
-              size="small"
             />
 
             <v-btn
               color="primary"
-              size="large"
               class="ms-3"
               :loading="wsConf.connecting"
               @click="connectWebsocket()">
               Connect Websocket
             </v-btn>
 
+            <v-btn
+              variant="outlined"
+              color="error"
+              class="ms-3"
+              :disabled="!wsConf.connected"
+              :loading="wsConf.connecting"
+              @click="disconnectWebsocket()">
+              Disonnect
+            </v-btn>
+
           </v-card-actions>
 
+        </v-card>
+
+        <v-card prepend-icon="mdi-mail" title="Subscriptions" :disabled="wsConf.connected" class="mt-4">
+          <v-card-text>
+            <u-form
+              :target="subscribeConf"
+              :fields="[
+                {
+                  key: 'prefix', identifier: 'text', label: 'Subscription Prefix',
+                }
+              ]"
+            />
+          </v-card-text>
         </v-card>
 
         <v-card prepend-icon="mdi-send" title="Send Data" :disabled="!wsConf.connected" class="mt-4">
@@ -164,6 +211,9 @@ const events = ref([]);
             <u-form
               :target="sendConf"
               :fields="[
+                {
+                  key: 'room', identifier: 'text', label: 'Room',
+                },
                 {
                   key: 'data', identifier: 'textarea', label: 'Data',
                 }
@@ -175,7 +225,7 @@ const events = ref([]);
             <v-btn
               color="primary"
               size="large"
-              :disabled="!sendConf.data"
+              :disabled="!sendConf.room || !sendConf.data"
               @click="sendData()">
               Send Data
             </v-btn>
@@ -184,7 +234,7 @@ const events = ref([]);
         </v-card>
 
       </v-col>
-      <v-col cols="12" md="6">
+      <v-col cols="12" md="6" lg="8">
         <v-card prepend-icon="mdi-database" title="Events">
 
           <v-code>
